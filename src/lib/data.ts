@@ -152,6 +152,7 @@ export const skills = {
       { name: "Redux", level: 85 },
       { name: "Tailwind CSS", level: 88 },
       { name: "Material UI", level: 90 },
+      { name: "Java", level: 78 },
     ],
   },
   backend: {
