@@ -49,6 +49,20 @@ npm run build
 npm start
 ```
 
+### Contact Form Email Setup (EmailJS)
+
+The contact form sends email directly using EmailJS.
+
+1. Create `.env.local` from `.env.example`.
+2. Configure your EmailJS variables:
+   - `NEXT_PUBLIC_EMAILJS_SERVICE_ID=service_wcylhjr`
+   - `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=template_xxxxxxx`
+   - `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=xxxxxxxxxxxxxxx`
+3. In EmailJS, ensure your template accepts these params:
+   - `from_name`, `from_email`, `subject`, `message`, `reply_to`
+
+For production, add the same variables in your hosting platform (for example, Vercel Project Settings -> Environment Variables).
+
 ## Project Structure
 
 ```

@@ -1,32 +1,35 @@
-'use client'
+"use client";
 
-import { motion, useInView } from 'framer-motion'
-import { useRef, useState } from 'react'
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Send, 
-  Github, 
-  Linkedin, 
+import { motion, useInView } from "framer-motion";
+import { useRef, useState } from "react";
+import emailjs from "@emailjs/browser";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  Github,
+  Linkedin,
   Download,
   ArrowUpRight,
   CheckCircle,
-  Loader2
-} from 'lucide-react'
-import { personalInfo } from '@/lib/data'
+  Loader2,
+} from "lucide-react";
+import { personalInfo } from "@/lib/data";
 
 export default function Contact() {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [formState, setFormState] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -36,7 +39,7 @@ export default function Contact() {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -45,56 +48,103 @@ export default function Contact() {
       y: 0,
       transition: { duration: 0.5 },
     },
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    setIsSubmitting(false)
-    setIsSubmitted(true)
-    setFormState({ name: '', email: '', subject: '', message: '' })
-    
-    // Reset success message after 5 seconds
-    setTimeout(() => setIsSubmitted(false), 5000)
-  }
+    e.preventDefault();
+    setErrorMessage(null);
+    setIsSubmitted(false);
+    setIsSubmitting(true);
+
+    try {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error(
+          "Email service is not configured. Please add EmailJS environment variables.",
+        );
+      }
+
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          from_name: formState.name,
+          from_email: formState.email,
+          phone: formState.phone,
+          subject: formState.subject,
+          message: formState.message,
+          reply_to: formState.email,
+        },
+        { publicKey },
+      );
+
+      setIsSubmitted(true);
+      setFormState({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+      });
+
+      // Reset success message after 5 seconds
+      setTimeout(() => setIsSubmitted(false), 5000);
+    } catch (error) {
+      const providerMessage =
+        typeof error === "object" &&
+        error !== null &&
+        "text" in error &&
+        typeof (error as { text?: unknown }).text === "string"
+          ? (error as { text: string }).text
+          : null;
+
+      setErrorMessage(
+        providerMessage ||
+          (error instanceof Error
+            ? error.message
+            : "Something went wrong while sending your message."),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const contactLinks = [
     {
       icon: Mail,
-      label: 'Email',
+      label: "Email",
       value: personalInfo.email,
       href: `mailto:${personalInfo.email}`,
     },
     {
       icon: Phone,
-      label: 'Phone',
+      label: "Phone",
       value: personalInfo.phone,
       href: `tel:${personalInfo.phone}`,
     },
     {
       icon: MapPin,
-      label: 'Location',
+      label: "Location",
       value: personalInfo.location,
-      href: '#',
+      href: "#",
     },
-  ]
+  ];
 
   const socialLinks = [
     {
       icon: Github,
-      label: 'GitHub',
+      label: "GitHub",
       href: personalInfo.github,
     },
     {
       icon: Linkedin,
-      label: 'LinkedIn',
+      label: "LinkedIn",
       href: personalInfo.linkedin,
     },
-  ]
+  ];
 
   return (
     <section id="contact" className="py-14 md:py-16 relative overflow-hidden">
@@ -107,7 +157,7 @@ export default function Contact() {
           ref={ref}
           variants={containerVariants}
           initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
+          animate={isInView ? "visible" : "hidden"}
           className="max-w-6xl mx-auto"
         >
           {/* Section Header */}
@@ -116,11 +166,13 @@ export default function Contact() {
               Get in Touch
             </span>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 tracking-tight">
-              Let's Build Something{' '}
+              Let's Build Something{" "}
               <span className="gradient-text">Amazing Together</span>
             </h2>
             <p className="text-muted max-w-2xl mx-auto">
-              I'm currently open to new opportunities. Whether you have a project in mind or just want to connect, I'd love to hear from you.
+              I'm currently open to new opportunities. Whether you have a
+              project in mind or just want to connect, I'd love to hear from
+              you.
             </p>
           </motion.div>
 
@@ -135,7 +187,7 @@ export default function Contact() {
                 <h3 className="text-xl font-semibold text-foreground">
                   Contact Information
                 </h3>
-                
+
                 <div className="space-y-4">
                   {contactLinks.map((link) => (
                     <motion.a
@@ -188,20 +240,17 @@ export default function Contact() {
               <motion.a
                 href={personalInfo.resumeUrl}
                 download="Bikash_Resume.pdf"
-                className="btn-primary w-full justify-center"
+                className="btn-primary w-full justify-center whitespace-nowrap"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-5 h-5 shrink-0" />
                 Download Resume
               </motion.a>
             </motion.div>
 
             {/* Contact Form */}
-            <motion.div
-              variants={itemVariants}
-              className="lg:col-span-3"
-            >
+            <motion.div variants={itemVariants} className="lg:col-span-3">
               <div className="glass-card p-6 md:p-8">
                 <h3 className="text-xl font-semibold text-foreground mb-6">
                   Send me a message
@@ -227,7 +276,10 @@ export default function Contact() {
                   <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-muted mb-2">
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium text-muted mb-2"
+                        >
                           Your Name
                         </label>
                         <input
@@ -235,13 +287,18 @@ export default function Contact() {
                           id="name"
                           required
                           value={formState.name}
-                          onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                          onChange={(e) =>
+                            setFormState({ ...formState, name: e.target.value })
+                          }
                           className="w-full px-4 py-3 rounded-xl bg-card-hover border border-card-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-foreground placeholder:text-muted"
-                          placeholder="John Doe"
+                          placeholder="Enter name"
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-muted mb-2">
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-muted mb-2"
+                        >
                           Your Email
                         </label>
                         <input
@@ -249,15 +306,46 @@ export default function Contact() {
                           id="email"
                           required
                           value={formState.email}
-                          onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                          onChange={(e) =>
+                            setFormState({
+                              ...formState,
+                              email: e.target.value,
+                            })
+                          }
                           className="w-full px-4 py-3 rounded-xl bg-card-hover border border-card-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-foreground placeholder:text-muted"
-                          placeholder="john@example.com"
+                          placeholder="Enter email"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="subject" className="block text-sm font-medium text-muted mb-2">
+                      <label
+                        htmlFor="phone"
+                        className="block text-sm font-medium text-muted mb-2"
+                      >
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        required
+                        value={formState.phone}
+                        onChange={(e) =>
+                          setFormState({
+                            ...formState,
+                            phone: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 rounded-xl bg-card-hover border border-card-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-foreground placeholder:text-muted"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="subject"
+                        className="block text-sm font-medium text-muted mb-2"
+                      >
                         Subject
                       </label>
                       <input
@@ -265,14 +353,22 @@ export default function Contact() {
                         id="subject"
                         required
                         value={formState.subject}
-                        onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
+                        onChange={(e) =>
+                          setFormState({
+                            ...formState,
+                            subject: e.target.value,
+                          })
+                        }
                         className="w-full px-4 py-3 rounded-xl bg-card-hover border border-card-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-foreground placeholder:text-muted"
-                        placeholder="Job Opportunity / Project Collaboration"
+                        placeholder="Enter opportunity"
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-muted mb-2">
+                      <label
+                        htmlFor="message"
+                        className="block text-sm font-medium text-muted mb-2"
+                      >
                         Message
                       </label>
                       <textarea
@@ -280,31 +376,42 @@ export default function Contact() {
                         required
                         rows={5}
                         value={formState.message}
-                        onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                        onChange={(e) =>
+                          setFormState({
+                            ...formState,
+                            message: e.target.value,
+                          })
+                        }
                         className="w-full px-4 py-3 rounded-xl bg-card-hover border border-card-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-foreground placeholder:text-muted resize-none"
-                        placeholder="Tell me about your project or opportunity..."
+                        placeholder="Please tell me about your project or opportunity..."
                       />
                     </div>
 
                     <motion.button
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-primary w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-primary w-full justify-center whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                       whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                       whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
                           Sending...
                         </>
                       ) : (
                         <>
-                          <Send className="w-5 h-5" />
+                          <Send className="w-5 h-5 shrink-0" />
                           Send Message
                         </>
                       )}
                     </motion.button>
+
+                    {errorMessage && (
+                      <p className="text-sm text-red-400 text-center">
+                        {errorMessage}
+                      </p>
+                    )}
                   </form>
                 )}
               </div>
@@ -313,5 +420,5 @@ export default function Contact() {
         </motion.div>
       </div>
     </section>
-  )
+  );
 }
